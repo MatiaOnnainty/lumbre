@@ -1,0 +1,11 @@
+# Dependencias y paquetes generados por web-ext
+node_modules/
+extension/web-ext-artifacts/
+extension/.amo-upload-uuid
+
+# Credenciales de addons.mozilla.org: nunca al repo
+.env
+*.env
+
+# Copias de seguridad que deja install.sh
+*.backup.css

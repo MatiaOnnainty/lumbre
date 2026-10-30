@@ -1,0 +1,90 @@
+/* ============================================================
+   devtools.css — Herramientas de desarrollo con la paleta del userChrome
+   (Propuesta B: grafito + naranja damasco / claro + terracota).
+   Se importa desde userChrome.css y userContent.css; solo afecta a las
+   páginas chrome://devtools/.
+
+   Cada color va como light-dark(claro, oscuro): con devtools.theme = "auto"
+   las herramientas siguen el modo del navegador (el botón sol/luna de la
+   nueva pestaña). Variables tomadas de devtools/skin/variables.css,
+   common.css y webconsole.css de Firefox 158.
+   ============================================================ */
+
+@-moz-document url-prefix("chrome://devtools/") {
+  :root {
+    /* ── Texto: un punto más grande y más aire entre líneas ── */
+    --theme-body-font-size: 12px !important;
+    --theme-code-font-size: 12px !important;
+    --theme-code-line-height: 1.5 !important;
+    --monospace-font-family: "Ubuntu Sans Mono", "Ubuntu Mono", monospace !important;
+
+    /* ── Superficies ── */
+    --theme-body-background: light-dark(#FAFAFC, #181A22) !important;
+    --theme-body-emphasized-background: light-dark(#F0F1F6, #1E2029) !important;
+    --theme-sidebar-background: light-dark(#F5F5F9, #1E2029) !important;
+    --theme-tab-toolbar-background: light-dark(#EDEEF4, #14151B) !important;
+    --theme-toolbar-background: light-dark(#F5F5F9, #1E2029) !important;
+    --theme-toolbar-alternate-background: light-dark(#F5F5F9, #1E2029) !important;
+    --theme-toolbar-background-alt: light-dark(#F5F5F9, #1E2029) !important;
+    --theme-toolbar-hover: light-dark(#E2E4EE, #323646) !important;
+    --theme-toolbar-alternate-hover: light-dark(#E2E4EE, #323646) !important;
+    --theme-toolbar-hover-active: light-dark(#D8DBE6, #3A3F50) !important;
+    --theme-toolbar-background-hover: light-dark(#E2E4EE, #323646) !important;
+    --theme-splitter-color: light-dark(#D2D5E2, #2C303C) !important;
+    --theme-emphasized-splitter-color: light-dark(#C3C7D6, #383D4D) !important;
+    --theme-toolbar-separator: light-dark(#D2D5E2, #383D4D) !important;
+    --theme-popup-background: light-dark(#FFFFFF, #1E2029) !important;
+    --theme-popup-color: light-dark(#242735, #ECEEF5) !important;
+    --theme-popup-border-color: light-dark(#D2D5E2, #383D4D) !important;
+    --theme-select-background: light-dark(#EDEEF4, #282B37) !important;
+
+    /* ── Texto e íconos ── */
+    --theme-text-color-strong: light-dark(#242735, #ECEEF5) !important;
+    --theme-body-color: light-dark(#3A3F50, #C5CADB) !important;
+    --theme-toolbar-color: light-dark(#505970, #A9AFC2) !important;
+    --theme-toolbarbutton-color: light-dark(#505970, #A9AFC2) !important;
+    --theme-comment: light-dark(#626A80, #8E95AA) !important;
+    --theme-text-color-alt: light-dark(#626A80, #A9AFC2) !important;
+    --theme-text-color-inactive: light-dark(#8A91A5, #737A8F) !important;
+    --theme-icon-color: light-dark(#505970, #C5CADB) !important;
+    --theme-link-color: light-dark(#6947C7, #B3A0FF) !important;
+
+    /* ── Acento: pestaña activa, botones activos, selección, foco ── */
+    --theme-toolbar-selected-color: light-dark(#B94D18, #FFAA70) !important;
+    --theme-toolbarbutton-checked-color: light-dark(#B94D18, #FFAA70) !important;
+    --theme-icon-checked-color: light-dark(#B94D18, #FFAA70) !important;
+    --tab-line-selected-color: light-dark(#B94D18, #FFAA70) !important;
+    --theme-focus-outline-color: light-dark(#B94D18, #FFAA70) !important;
+    --theme-selection-background: light-dark(#FBEBDD, #3B2B24) !important;
+    --theme-selection-color: light-dark(#9F3E10, #FFBC8D) !important;
+    --theme-selection-background-hover: light-dark(#F3F0EC, #2A2B33) !important;
+    --theme-text-selection-background: light-dark(#F6D9C3, #4A3428) !important;
+
+    /* ── Errores y advertencias: fondo tenue (la marca va a la izquierda) ── */
+    --theme-error-background: light-dark(#FDF2F0, rgba(255, 139, 122, 0.07)) !important;
+    --theme-error-border: light-dark(rgba(194, 65, 45, 0.14), rgba(255, 139, 122, 0.14)) !important;
+    --theme-error-color: light-dark(#A33421, #FFB3A8) !important;
+    --theme-warning-background: light-dark(#FDF8E9, rgba(242, 200, 110, 0.06)) !important;
+    --theme-warning-border: light-dark(rgba(160, 120, 0, 0.16), rgba(242, 200, 110, 0.14)) !important;
+    --theme-warning-color: light-dark(#7A5A00, #F2D58A) !important;
+
+    /* ── Consola: filas más altas ── */
+    --console-row-height: 24px !important;
+    --console-output-line-height: 1.5 !important;
+    --console-output-vertical-padding: 4px !important;
+  }
+
+  /* Marca de color a la izquierda de errores y advertencias, en vez de
+     depender solo del fondo (más fácil de recorrer con la vista) */
+  .message.error {
+    box-shadow: inset 3px 0 0 light-dark(#C2412D, #FF8B7A);
+  }
+  .message.warn {
+    box-shadow: inset 3px 0 0 light-dark(#C79A1E, #F2C86E);
+  }
+
+  /* Pestañas de las herramientas: texto un poco más grande */
+  .devtools-tab {
+    font-size: 12px !important;
+  }
+}

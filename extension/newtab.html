@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>Nueva pestaña</title>
+  <!-- En la pestaña, el logo de Firefox (como su nueva pestaña original),
+       no el de Lumbre. chrome://branding es accesible desde páginas. -->
+  <link rel="icon" href="chrome://branding/content/icon32.png">
+  <script src="js/theme.js"></script>
+  <!-- ?v= igual a la versión del manifest: Firefox cachea el CSS por URL y al
+       recargar la extensión puede seguir usando el viejo. Subirlo con la versión. -->
+  <link rel="stylesheet" href="css/newtab.css?v=0.7.0">
+  <script type="module" src="js/main.js"></script>
+</head>
+<body>
+  <!-- Ondas decorativas: naranja damasco y lavanda, con grano -->
+  <div class="backdrop" aria-hidden="true">
+    <svg class="waves waves-left" viewBox="0 0 600 500" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wl1" x1="0" y1="1" x2="1" y2="0">
+          <stop offset="0" stop-color="#FFAA70" stop-opacity="0.30"/>
+          <stop offset="0.5" stop-color="#FFAA70" stop-opacity="0.08"/>
+          <stop offset="1" stop-color="#B3A0FF" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="wl2" x1="0" y1="1" x2="1" y2="0.2">
+          <stop offset="0" stop-color="#B3A0FF" stop-opacity="0.16"/>
+          <stop offset="1" stop-color="#B3A0FF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0 140 C 120 120, 200 260, 300 330 S 520 470, 600 500 L 0 500 Z" fill="url(#wl2)"/>
+      <path d="M0 230 C 90 210, 170 330, 260 390 S 440 480, 520 500 L 0 500 Z" fill="url(#wl1)"/>
+      <path d="M0 300 C 80 290, 150 380, 220 430 S 340 495, 400 500 L 0 500 Z" fill="#FFAA70" fill-opacity="0.07"/>
+    </svg>
+    <svg class="waves waves-right" viewBox="0 0 600 500" preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wr1" x1="1" y1="1" x2="0" y2="0">
+          <stop offset="0" stop-color="#FFAA70" stop-opacity="0.28"/>
+          <stop offset="0.6" stop-color="#FFAA70" stop-opacity="0.06"/>
+          <stop offset="1" stop-color="#FFAA70" stop-opacity="0"/>
+        </linearGradient>
+        <linearGradient id="wr2" x1="1" y1="1" x2="0" y2="0.3">
+          <stop offset="0" stop-color="#B3A0FF" stop-opacity="0.14"/>
+          <stop offset="1" stop-color="#B3A0FF" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M600 170 C 480 160, 420 290, 330 360 S 140 470, 60 500 L 600 500 Z" fill="url(#wr2)"/>
+      <path d="M600 250 C 510 250, 450 350, 370 410 S 230 490, 160 500 L 600 500 Z" fill="url(#wr1)"/>
+    </svg>
+    <div class="grain"></div>
+  </div>
+
+  <header class="topbar">
+    <time id="clock" class="clock"></time>
+    <!-- Sol/luna ("boton modo dark-light.md"): la luna se convierte en sol -->
+    <button id="theme-toggle" class="icon-button theme-toggle" type="button" aria-label="Cambiar a modo claro">
+      <svg viewBox="0 0 20 20" width="18" height="18" fill="currentColor" aria-hidden="true">
+        <mask id="theme-moon-mask">
+          <rect x="0" y="0" width="20" height="20" fill="white"/>
+          <circle class="moon-cut" cx="11" cy="3" r="8" fill="black"/>
+        </mask>
+        <circle class="sun-moon" cx="10" cy="10" r="8" mask="url(#theme-moon-mask)"/>
+        <g class="sun-rays">
+          <circle cx="18" cy="10" r="1.5"/>
+          <circle cx="14" cy="16.928" r="1.5"/>
+          <circle cx="6" cy="16.928" r="1.5"/>
+          <circle cx="2" cy="10" r="1.5"/>
+          <circle cx="6" cy="3.1718" r="1.5"/>
+          <circle cx="14" cy="3.1718" r="1.5"/>
+        </g>
+      </svg>
+    </button>
+    <!-- Deslizadores cuyas perillas se cruzan al pasar el mouse ("ajustes boton.md") -->
+    <button id="open-settings" class="icon-button settings-button" type="button" aria-label="Ajustes" aria-expanded="false" aria-controls="settings">
+      <span class="slider-bar" aria-hidden="true"></span>
+      <span class="slider-bar" aria-hidden="true"></span>
+      <span class="slider-bar" aria-hidden="true"></span>
+    </button>
+  </header>
+
+  <main class="page">
+    <div class="head-row">
+      <section class="hero">
+        <p id="date" class="eyebrow"></p>
+        <h1>Tu espacio, a un clic.</h1>
+        <p id="greeting" class="greeting"></p>
+      </section>
+      <!-- Al lado del saludo: usa el espacio libre de la derecha -->
+      <section id="session" class="card session" aria-label="Sesión anterior" hidden></section>
+    </div>
+
+    <div id="search" class="search">
+      <label class="search-box">
+        <svg class="icon icon-lg" aria-hidden="true"><use href="#i-search"/></svg>
+        <input type="search" placeholder="Buscar en la web o entre tus pestañas" aria-label="Buscar en la web o entre tus pestañas"
+               role="combobox" aria-expanded="false" aria-controls="search-results" aria-autocomplete="list" autocomplete="off" spellcheck="false">
+        <kbd title="También Ctrl + K">/</kbd>
+      </label>
+      <ul id="search-results" class="search-results" role="listbox" aria-label="Resultados" hidden></ul>
+    </div>
+
+    <section id="shortcuts" class="shortcuts" aria-label="Accesos directos"></section>
+
+    <!-- Todo entra en la pantalla: cada columna se desplaza por dentro -->
+    <div class="columns">
+      <section id="recent" class="col recent" aria-label="Visitados recientemente"></section>
+      <section id="pinned" class="col pinned" aria-label="Fijados"></section>
+      <section id="spaces" class="col spaces" aria-label="Espacios"></section>
+    </div>
+  </main>
+
+  <!-- Herramientas: botón flotante con menú radial y panel -->
+  <div id="tools" class="dock">
+    <div id="tools-panel" class="card tools-panel" role="dialog" aria-label="Herramientas" hidden></div>
+    <div class="fab" data-open="false">
+      <button class="fab-option" type="button" data-tool="servers" tabindex="-1" aria-label="Servidores locales">
+        <svg class="icon" aria-hidden="true"><use href="#i-server"/></svg>
+        <span class="fab-label">Servidores</span>
+      </button>
+      <button class="fab-option" type="button" data-tool="utilities" tabindex="-1" aria-label="Utilidades">
+        <svg class="icon" aria-hidden="true"><use href="#i-code"/></svg>
+        <span class="fab-label">Utilidades</span>
+      </button>
+      <button class="fab-option" type="button" data-tool="notes" tabindex="-1" aria-label="Notas">
+        <svg class="icon" aria-hidden="true"><use href="#i-note"/></svg>
+        <span class="fab-label">Notas</span>
+      </button>
+      <button class="fab-main" type="button" aria-label="Herramientas" aria-expanded="false" aria-controls="tools-panel">
+        <svg class="icon icon-lg" aria-hidden="true"><use href="#i-plus"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <aside id="settings" class="drawer" aria-label="Ajustes" hidden>
+    <div class="drawer-head">
+      <h2>Ajustes</h2>
+      <button class="icon-button" type="button" data-close aria-label="Cerrar ajustes">
+        <svg class="icon" aria-hidden="true"><use href="#i-x"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" data-body></div>
+  </aside>
+
+  <dialog id="site-dialog" class="dialog">
+    <form method="dialog">
+      <h2 data-heading></h2>
+      <label class="label" for="site-title">Nombre</label>
+      <input class="field" id="site-title" name="title" autocomplete="off">
+      <label class="label" for="site-url">Dirección</label>
+      <input class="field mono" id="site-url" name="url" required autocomplete="off" placeholder="https://…">
+      <div class="suggestions">
+        <p class="hint">O elegí una pestaña abierta:</p>
+        <div class="chips" data-suggestions></div>
+      </div>
+      <div class="dialog-actions">
+        <button class="button ghost" value="cancel" formnovalidate>Cancelar</button>
+        <button class="button primary" value="ok">Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Íconos (trazo 1.75, estilo lineal como los del navegador) -->
+  <svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+    <symbol id="i-search" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.6-3.6"/></g></symbol>
+    <symbol id="i-globe" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></g></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20h4L18.6 9.4a2.1 2.1 0 0 0-3-3L5 17v3zM14 8l3 3" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-download" viewBox="0 0 24 24"><path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 15V4m0 0L7.5 8.5M12 4l4.5 4.5M5 19h14" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-rotate" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 0 2.4-5.7L4 8.5M4 4v4.5h4.5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h3.6l2 2h7.4a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9.5 6 6 6-6 6" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-external" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5M18 14v4a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"><rect x="3.5" y="4" width="17" height="7" rx="2"/><rect x="3.5" y="13" width="17" height="7" rx="2"/><path d="M7.5 7.5h.01M7.5 16.5h.01"/></g></symbol>
+    <symbol id="i-code" viewBox="0 0 24 24"><path d="m8.5 7-5 5 5 5M15.5 7l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M6 3.5h8.5L19 8v12.5H6zM14 3.5V8.5h5M9 13h6M9 16.5h4" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6.5h11M9 12h11M9 17.5h11M4.5 6.5h.01M4.5 12h.01M4.5 17.5h.01" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round"><rect x="4" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="1.5"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="1.5"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.5"/></g></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4.5 7h15M10 11v6M14 11v6M6.5 7l1 13h9l1-13M9.5 7V4.5h5V7" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </svg>
+</body>
+</html>

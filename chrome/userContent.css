@@ -1,0 +1,3 @@
+/* userContent.css — estilos para páginas internas de Firefox.
+   Herramientas de desarrollo con la paleta del userChrome (ver devtools.css). */
+@import url("devtools.css");

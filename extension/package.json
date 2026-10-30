@@ -1,0 +1,14 @@
+{
+  "name": "lumbre",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "description": "Extensión de Firefox: página de nueva pestaña personal",
+  "scripts": {
+    "test": "node --test test/",
+    "lint": "npx --yes web-ext@8 lint",
+    "start": "npx --yes web-ext@8 run --firefox=firefox",
+    "sign": "npx --yes web-ext@8 sign --channel=unlisted"
+  }
+}

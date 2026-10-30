@@ -1,0 +1,797 @@
+/* ============================================================
+   userChrome.css — Lumbre "Floating cards"
+   Riel lateral flotante + toolbar en tarjeta + contenido redondeado
+   Paleta: grafito + naranja damasco (Propuesta B, oscuro y claro)
+   Probado en Firefox 158 | sidebar.revamp (launcher nativo)
+   ============================================================
+   REQUISITO (lo aplica ../user.js): about:config →
+   toolkit.legacyUserProfileCustomizations.stylesheets = true
+   sidebar.verticalTabs = true        (íconos de pestañas en el riel)
+   sidebar.visibility   = always-show (el riel no se oculta)
+   Modo claro: @media (prefers-color-scheme: light) (lo activa la extensión Lumbre)
+   ============================================================ */
+
+/* Herramientas de desarrollo (solo aplica en chrome://devtools/).
+   @import tiene que ir antes que cualquier otra regla. */
+@import url("devtools.css");
+
+/* ── VARIABLES ──────────────────────────────────────────── */
+/* Paleta "Propuesta B — Grafito y naranja, con lavanda secundaria" (dark),
+   de propuestas-paleta-firefox.md. Los fondos de A se mantienen; cambian
+   los estados de acento y selección. */
+:root {
+  /* Transparencia: el fondo de la ventana y las tarjetas dejan ver el
+     escritorio. Requiere widget.transparent-windows = true en about:config.
+     Subí/bajá el último valor (0 = invisible, 1 = opaco) a gusto. */
+  --bg-window:  rgba(20, 21, 27, 0.82);  /* #14151B  base de la ventana        */
+  --bg-card:    rgba(30, 32, 41, 0.93);  /* #1E2029  panel superior y lateral  */
+  --bg-panel:   #1E2029;                 /* menús y findbar (opacos, para leer) */
+  --bg-newtab:  #181A22;                 /* detrás de las páginas              */
+  --bg-field:   rgba(40, 43, 55, 0.95);  /* #282B37  barra de direcciones      */
+  --bg-tile:    rgba(255, 255, 255, 0.04); /* íconos del riel lateral         */
+  --bg-hover:   #323646;
+  --border:     #383D4D;                 /* bordes y separadores               */
+  --border-hi:  #454A5D;                 /* borde un paso más claro (derivado) */
+  --text:       #ECEEF5;
+  --text-muted: #A9AFC2;
+  --icon:       #C5CADB;                 /* íconos normales                    */
+
+  /* Acento naranja damasco: pestaña activa, foco y acciones principales */
+  --accent:       #FFAA70;
+  --accent-rgb:   255, 170, 112;
+  --accent-hover: #FFBC8D;
+  --bg-selected:  #3B2B24;               /* fondo de lo seleccionado           */
+  --on-accent:    #24170F;               /* texto sobre botón naranja          */
+  /* Lavanda: solo recurso decorativo secundario (ondas del inicio, etc.) */
+  --lavender:     #B3A0FF;
+
+  /* Que los componentes propios de Firefox usen la misma paleta
+     (anillo de foco, casillas, botones principales de paneles, íconos) */
+  --color-accent-primary: var(--accent) !important;
+  --color-accent-primary-hover: var(--accent-hover) !important;
+  --color-accent-primary-active: var(--accent-hover) !important;
+  --focus-outline-color: var(--accent) !important;
+  --button-text-color-primary: var(--on-accent) !important;
+  --toolbarbutton-icon-fill: var(--icon) !important;
+  --toolbarbutton-icon-fill-attention: var(--accent) !important;
+
+  /* Neutralizar el tema instalado (Ocean Fox, Firefox Color, etc.).
+     Los temas escriben estas variables como estilo en línea sin !important,
+     así que estas ganan. Nombres tomados de LightweightThemeConsumer y
+     ThemeVariableMap de Firefox 158. */
+  --lwt-accent-color: #14151B !important;
+  --lwt-accent-color-inactive: #14151B !important;
+  --lwt-text-color: var(--text) !important;
+  --lwt-header-image: none !important;
+  --lwt-additional-images: none !important;
+  --lwt-tab-line-color: var(--accent) !important;
+  --toolbar-background-color: var(--bg-card) !important;
+  --toolbar-text-color: var(--text) !important;
+  --toolbar-field-background-color: var(--bg-field) !important;
+  --toolbar-field-background-color-focus: var(--bg-field) !important;
+  --toolbar-field-border-color: var(--border) !important;
+  --toolbar-field-border-color-focus: rgba(var(--accent-rgb), 0.6) !important;
+  --toolbar-field-text-color: var(--text) !important;
+  --toolbar-field-text-color-focus: var(--text) !important;
+  --lwt-toolbar-field-highlight: rgba(var(--accent-rgb), 0.35) !important;
+  --lwt-toolbar-field-highlight-text: var(--text) !important;
+  --toolbarbutton-background-color-hover: var(--bg-hover) !important;
+  --toolbarbutton-background-color-active: var(--bg-hover) !important;
+  --toolbarseparator-color: var(--border) !important;
+  --tabs-navbar-separator-color: transparent !important;
+  --chrome-content-separator-color: transparent !important;
+  --tab-background-color-selected: var(--bg-selected) !important;
+  --tab-text-color-selected: var(--accent) !important;
+  --tab-icon-fill-loading: var(--accent) !important;
+  --urlbarview-background-color-selected: var(--bg-selected) !important;
+  --urlbarview-text-color-selected: var(--accent) !important;
+  --panel-background-color: var(--bg-panel) !important;
+  --panel-text-color: var(--text) !important;
+  --panel-border-color: var(--border-hi) !important;
+  --sidebar-background-color: var(--bg-panel) !important;
+  --sidebar-text-color: var(--text) !important;
+  --sidebar-border-color: var(--border) !important;
+  --tabpanel-background-color: var(--bg-newtab) !important;
+
+  --gap:        8px;       /* separación entre tarjetas      */
+  --radius-card: 14px;
+  --radius-sm:  8px;
+  --navbar-height: 42px;   /* alto total de la toolbar (con borde) */
+  --tile-size:  34px;      /* íconos cuadrados del riel           */
+  --tile-margin: 5px;
+  --rail-width: calc(var(--tile-size) + var(--tile-margin) * 2 + 2px);
+  --rail-expanded-width: 240px;
+  /* Espacio libre arriba del riel para el botón de la barra lateral:
+     --rail-button-pad de aire arriba y abajo del botón. Tiene que quedar
+     >= alto de la toolbar para que las fijadas no caigan debajo de ella. */
+  --rail-button-pad: 7px;
+  --rail-top:   calc(var(--tile-size) + var(--rail-button-pad) * 2);
+  --shadow-card: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --favicon-halo: drop-shadow(0 0 0.5px rgba(255, 255, 255, 0.85)) drop-shadow(0 0 1px rgba(255, 255, 255, 0.4));
+}
+
+/* ── MODO CLARO ─────────────────────────────────────────────
+   Lo activa la extensión de la nueva pestaña (botón sol/luna): aplica un
+   tema claro con browser.theme.update, y Firefox pasa todos sus documentos
+   internos a prefers-color-scheme: light (la ventana, pero también los
+   diálogos como "¿Cerrar pestañas?", que son documentos aparte y no reciben
+   el atributo lwt-toolbar de la raíz). Los colores de ese tema no se usan
+   (el bloque de arriba los neutraliza); solo sirve de interruptor para esta
+   paleta: Propuesta B light (terracota) sobre los neutros claros de la A. */
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg-window:  rgba(233, 234, 240, 0.86); /* #E9EAF0 */
+    --bg-card:    rgba(245, 245, 249, 0.94); /* #F5F5F9 */
+    --bg-panel:   #FFFFFF;
+    --bg-newtab:  #F3F4F8;
+    --bg-field:   rgba(237, 238, 244, 0.95); /* #EDEEF4 */
+    --bg-tile:    rgba(36, 39, 53, 0.05);
+    --bg-hover:   #E2E4EE;
+    --border:     #D2D5E2;
+    --border-hi:  #C3C7D6;
+    --text:       #242735;
+    --text-muted: #626A80;
+    --icon:       #505970;
+
+    --accent:       #B94D18;
+    --accent-rgb:   185, 77, 24;
+    --accent-hover: #9F3E10;
+    --bg-selected:  #FBEBDD;
+    --on-accent:    #FFFFFF;
+    --lavender:     #6947C7;
+
+    --lwt-accent-color: #E9EAF0 !important;
+    --lwt-accent-color-inactive: #E9EAF0 !important;
+    --shadow-card: 0 6px 24px rgba(36, 39, 53, 0.12);
+    --scrollbar-thumb: rgba(36, 39, 53, 0.15);
+    --favicon-halo: drop-shadow(0 0 0.5px rgba(36, 39, 53, 0.9)) drop-shadow(0 0 1px rgba(36, 39, 53, 0.55));
+  }
+}
+
+/* Favicons del riel: los blancos (GitHub…) se pierden en claro y los negros
+   en oscuro. Desde acá no se pueden medir sus colores, así que todos llevan
+   un contorno fino del color opuesto al fondo (--favicon-halo); en los de
+   color casi no se nota. */
+/* [pending][discarded]: las descargadas a mano, que Firefox ya atenúa con
+   filter (browser.tabs.fadeOutExplicitlyUnloadedTabs). Las fijadas recién
+   abiertas también son [pending], pero sin [discarded]: esas sí llevan halo. */
+.tab-icon-image:not([pending][discarded]) {
+  filter: var(--favicon-halo) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   1. FONDO DE VENTANA
+   ══════════════════════════════════════════════════════════ */
+
+/* Un único fondo en la raíz: con colores semitransparentes, repetirlo en
+   capas anidadas sumaría opacidad y taparía el escritorio. Solo la ventana
+   principal: los diálogos son documentos aparte y usan su propio fondo. */
+#main-window {
+  background-color: var(--bg-window) !important;
+  background-image: none !important;
+  appearance: none !important;
+}
+
+body,
+#navigator-toolbox,
+#browser {
+  background-color: transparent !important;
+  background-image: none !important;
+}
+
+#navigator-toolbox {
+  border-bottom: none !important;
+  box-shadow: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   2. OCULTAR TABS HORIZONTALES Y HEADER DE SIDEBAR
+   ══════════════════════════════════════════════════════════ */
+
+#TabsToolbar:not([customizing]) {
+  visibility: collapse !important;
+}
+
+#sidebar-header {
+  display: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   3. RIEL LATERAL (launcher de la sidebar nativa)
+      En Firefox 158 es #sidebar-container > <sidebar-main>.
+      Fijo a la izquierda, ocupa toda la altura de la ventana
+      como una tarjeta flotante. Pensado para:
+        sidebar.verticalTabs = true   (pestañas como íconos)
+        sidebar.visibility   = always-show
+   ══════════════════════════════════════════════════════════ */
+
+#sidebar-container {
+  /* Cada ícono es un "tile" cuadrado de --tile, con --tile-gap a los lados */
+  --tile: var(--tile-size);
+  --tile-gap: var(--tile-margin);
+
+  /* Medidas que leen las pestañas verticales y los botones del launcher */
+  --tab-min-height: var(--tile);
+  --tab-collapsed-background-width: var(--tile);
+  --tab-margin-inline-inner: var(--tile-gap);
+  --tab-collapsed-width: calc(var(--tile) + var(--tile-gap) * 2);
+  /* Firefox deriva estas en :root a partir de --tab-min-height, así que hay
+     que recalcularlas acá también. Si no, las filas de pestañas fijadas miden
+     menos que los tiles y la altura del contenedor oscila (glitch al abrir
+     pestañas nuevas). Fórmulas copiadas de tabs.css de Firefox 158. */
+  --tab-height-with-margin-padding: calc(5px + var(--tab-min-height) + (2 * var(--tab-margin-block)));
+  --tabstrip-min-height: calc(var(--tab-min-height) + 2 * var(--tab-margin-block));
+  --tab-group-label-size: var(--tab-min-height);
+  --tab-group-label-height: max(1.5em, var(--tab-min-height) - 14px);
+  --tab-border-radius: 10px;
+  --sidebar-launcher-button-padding-inline: var(--tile-gap);
+  /* Ancho interno del launcher expandido = riel expandido menos el borde */
+  --sidebar-expanded-launcher-width: calc(var(--rail-expanded-width) - 2px);
+
+  /* moz-button (botones de herramientas del launcher, dentro del shadow DOM) */
+  --button-border-radius: 10px;
+  --button-background-color-ghost: var(--bg-tile);
+  --button-background-color-ghost-hover: var(--bg-hover);
+  --button-background-color-ghost-active: var(--bg-hover);
+  --button-border-color-ghost: var(--border);
+  --button-border-color-ghost-hover: var(--border-hi);
+  --button-text-color-ghost: var(--icon);
+  --button-text-color-ghost-hover: var(--text);
+  --button-background-color: var(--bg-selected);
+  --button-border: 1px solid var(--border);
+  --toolbarbutton-icon-fill: var(--icon);
+
+  /* Separadores: una línea fina en vez de los puntitos de Firefox */
+  --sidebar-divider-image: linear-gradient(var(--border-hi), var(--border-hi));
+  --sidebar-divider-size: calc(var(--tile) - 8px) 1px;
+  --sidebar-divider-position: center;
+}
+
+:root:not([inFullscreen]) #sidebar-container:not([hidden]) {
+  position: fixed !important;
+  top: var(--gap) !important;
+  bottom: var(--gap) !important;
+  inset-inline-start: var(--gap) !important;
+  z-index: 10 !important;
+  box-sizing: border-box !important;
+  width: var(--rail-width) !important;
+  min-width: var(--rail-width) !important;
+  max-width: var(--rail-width) !important;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card) !important;
+  /* Arriba queda lugar para el botón de la barra lateral (ver más abajo) */
+  padding-block: var(--rail-top) 6px !important;
+}
+
+/* Expandida: Firefox agranda el riel; toolbar y contenido se corren con él */
+:root:has(#sidebar-container[sidebar-launcher-expanded]) {
+  --rail-width: var(--rail-expanded-width);
+}
+
+/* Con el riel expandido el "+" es una fila con texto, no un círculo */
+#tabbrowser-tabs[expanded] > #tabbrowser-arrowscrollbox > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
+#tabbrowser-tabs[expanded] > #vertical-tabs-newtab-button {
+  border-radius: var(--tab-border-radius) !important;
+}
+
+/* Botón de la barra lateral: sale del #nav-bar y se ubica arriba del riel,
+   alineado con la toolbar. La toolbox va por encima del riel (z-index) para
+   que el botón reciba los clics; es transparente, así que el riel se ve igual. */
+:root:not([inFullscreen]):has(#sidebar-container:not([hidden])) {
+  #navigator-toolbox {
+    position: relative !important;
+    z-index: 11 !important;
+    background: transparent !important;
+  }
+
+  #nav-bar-customization-target > #sidebar-button {
+    position: fixed !important;
+    top: calc(var(--gap) + 1px + var(--rail-button-pad)) !important;
+    inset-inline-start: calc(var(--gap) + 1px + var(--tile-margin)) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* El ícono puede estar dentro de un .toolbarbutton-badge-stack; se le da
+     forma de tile al que sea hijo directo del botón */
+  #sidebar-button > :is(.toolbarbutton-icon, .toolbarbutton-badge-stack) {
+    box-sizing: border-box !important;
+    width: var(--tile-size) !important;
+    height: var(--tile-size) !important;
+    padding: calc((var(--tile-size) - 16px) / 2) !important;
+    border-radius: 10px !important;
+    background-color: var(--bg-tile) !important;
+    outline: 1px solid var(--border) !important;
+    outline-offset: -1px !important;
+  }
+
+  #sidebar-button > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+    padding: 0 !important;
+    width: 16px !important;
+    height: 16px !important;
+    background: transparent !important;
+  }
+
+  #sidebar-button:hover > :is(.toolbarbutton-icon, .toolbarbutton-badge-stack) {
+    background-color: var(--bg-hover) !important;
+  }
+}
+
+/* Espacio a la izquierda para que toolbar y contenido no queden debajo del riel */
+:root:not([inFullscreen]):has(#sidebar-container:not([hidden])) #navigator-toolbox,
+:root:not([inFullscreen]):has(#sidebar-container:not([hidden])) #browser {
+  padding-inline-start: calc(var(--rail-width) + var(--gap) * 2) !important;
+}
+
+/* Sin riel: solo el margen normal */
+:root:not([inFullscreen]):has(#sidebar-container[hidden]) #navigator-toolbox,
+:root:not([inFullscreen]):has(#sidebar-container[hidden]) #browser {
+  padding-inline-start: var(--gap) !important;
+}
+
+/* Sin franjas de fondo propias: el riel tiene un solo color de punta a punta */
+#vertical-tabs,
+#vertical-tabs #tabbrowser-tabs,
+#vertical-tabs #pinned-tabs-container,
+#vertical-tabs #tabbrowser-arrowscrollbox,
+#sidebar-container sidebar-main {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+#vertical-tabs #pinned-tabs-container::part(scrollbox),
+#vertical-tabs #pinned-tabs-container::part(items-wrapper),
+#vertical-tabs #tabbrowser-arrowscrollbox::part(scrollbox) {
+  background: transparent !important;
+}
+
+/* Pestañas como tiles: fondo sutil + borde. La activa: fondo naranja tenue
+   + marca lateral (sombra interna: no cambia tamaños, ver nota del "+") */
+#vertical-tabs .tab-background {
+  background-color: var(--bg-tile) !important;
+  outline: 1px solid var(--border) !important;
+  outline-offset: -1px !important;
+  box-shadow: none !important;
+}
+
+#vertical-tabs .tabbrowser-tab:hover > .tab-stack > .tab-background {
+  background-color: var(--bg-hover) !important;
+}
+
+#vertical-tabs .tabbrowser-tab:is([selected], [multiselected]) > .tab-stack > .tab-background {
+  background-color: var(--bg-selected) !important;
+  outline-color: rgba(var(--accent-rgb), 0.35) !important;
+  box-shadow: inset 3px 0 0 var(--accent) !important;
+}
+
+/* Texto de la pestaña activa (visible con el riel expandido) */
+#vertical-tabs .tabbrowser-tab[selected] .tab-label {
+  color: var(--accent) !important;
+}
+
+/* Botón "+" circular como en la referencia.
+   OJO: solo cambios visuales (outline, colores). Nada de margin/border/padding:
+   Firefox alterna entre estos dos botones según si las pestañas desbordan, y si
+   miden distinto entra en un bucle de overflow (glitch al abrir pestañas). */
+#tabbrowser-arrowscrollbox[orient="vertical"] > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button,
+#vertical-tabs-newtab-button {
+  border-radius: 50% !important;
+  outline: 1px solid var(--border-hi) !important;
+  outline-offset: -1px !important;
+  background-color: var(--bg-tile) !important;
+  color: var(--text) !important;
+}
+
+#tabbrowser-arrowscrollbox[orient="vertical"] > #tabbrowser-arrowscrollbox-periphery > #tabs-newtab-button:hover,
+#vertical-tabs-newtab-button:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+/* Separador entre pestañas fijadas y normales */
+#vertical-pinned-tabs-splitter {
+  background-color: transparent !important;
+  background-image: var(--sidebar-divider-image) !important;
+  background-size: var(--sidebar-divider-size) !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   4. PANEL DE SIDEBAR (Sidebery / marcadores / historial)
+      También como tarjeta flotante al lado del riel.
+   ══════════════════════════════════════════════════════════ */
+
+#sidebar-box {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card) !important;
+  overflow: clip !important;
+  margin-block: var(--gap) !important;
+  margin-inline-end: 0 !important;
+  min-width: 200px !important;
+  max-width: 320px !important;
+}
+
+/* El fondo ya lo pone #sidebar-box; acá transparente para no duplicar capas */
+#sidebar,
+#sidebar-box browser {
+  background-color: transparent !important;
+}
+
+/* El riel es fijo, así que su splitter de redimensionado no aporta nada */
+#sidebar-launcher-splitter {
+  display: none !important;
+}
+
+#sidebar-splitter {
+  background: transparent !important;
+  border: none !important;
+  width: var(--gap) !important;
+  min-width: var(--gap) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   5. TOOLBAR SUPERIOR EN TARJETA
+   ══════════════════════════════════════════════════════════ */
+
+#nav-bar {
+  background-color: var(--bg-card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card) !important;
+  /* Sin margen inferior: la toolbox termina justo donde arrancan las
+     pestañas fijadas del riel, así no tapa sus clics. El espacio con el
+     contenido lo pone #tabbrowser-tabbox / #sidebar-box con margin-top. */
+  margin: var(--gap) var(--gap) 0 0 !important;
+  padding: 3px 6px !important;
+  box-sizing: border-box !important;
+  min-height: var(--navbar-height) !important;
+  max-height: var(--navbar-height) !important;
+  -moz-window-dragging: drag; /* sin tabs arriba, se arrastra la ventana desde acá */
+}
+
+#PersonalToolbar {
+  background-color: transparent !important;
+  margin: calc(var(--gap) * -0.5) var(--gap) var(--gap) 0 !important;
+  padding-inline: 6px !important;
+}
+
+#toolbar-menubar {
+  background-color: transparent !important;
+}
+
+/* Orden de los botones: ← → ⌂ ⟳ [ dirección ] … cuenta */
+#nav-bar-customization-target > *                    { order: 6; }
+#nav-bar-customization-target > #sidebar-button      { order: 0; }
+#nav-bar-customization-target > #back-button         { order: 1; }
+#nav-bar-customization-target > #forward-button      { order: 2; }
+#nav-bar-customization-target > #home-button         { order: 3; }
+#nav-bar-customization-target > #stop-reload-button  { order: 4; }
+#nav-bar-customization-target > #urlbar-container    { order: 5; }
+#nav-bar-customization-target > #fxa-toolbar-menu-button { order: 9; }
+
+/* Los springs centraban la barra; acá la queremos expandida */
+#nav-bar toolbarspring {
+  display: none !important;
+}
+
+#urlbar-container {
+  flex: 1 1 auto !important;
+  margin-inline: 8px !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   6. BARRA DE DIRECCIONES
+   ══════════════════════════════════════════════════════════ */
+
+#urlbar {
+  color: var(--text) !important;
+}
+
+#urlbar {
+  --urlbar-background-color: var(--bg-field) !important;
+  --urlbar-background-color-focus: var(--bg-field) !important;
+  --toolbar-field-background-color: var(--bg-field) !important;
+  --toolbar-field-focus-background-color: var(--bg-field) !important;
+}
+
+#urlbar-background,
+#urlbar .urlbar-background {
+  background-color: var(--bg-field) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+
+#urlbar[focused] > :is(#urlbar-background, .urlbar-background),
+#urlbar[open] > :is(#urlbar-background, .urlbar-background) {
+  border-color: rgba(var(--accent-rgb), 0.6) !important;
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.15) !important;
+}
+
+#urlbar[open] > :is(#urlbar-background, .urlbar-background) {
+  background-color: var(--bg-panel) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+#urlbar-input,
+.urlbar-input {
+  color: var(--text) !important;
+}
+
+#urlbar-input::placeholder,
+.urlbar-input::placeholder {
+  color: var(--text-muted) !important;
+  opacity: 1 !important;
+}
+
+#identity-box,
+#tracking-protection-icon-container {
+  color: var(--text-muted) !important;
+}
+
+/* Atajo "Ctrl+L" a la derecha cuando la barra no tiene foco */
+#urlbar:not([focused]):not([open]) .urlbar-input-container::after {
+  content: "Ctrl+L";
+  align-self: center;
+  margin-inline: 6px 4px;
+  padding: 2px 8px;
+  border: 1px solid var(--border-hi);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 16px;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════════════════════════════════
+   7. BOTONES
+   ══════════════════════════════════════════════════════════ */
+
+.toolbarbutton-1 {
+  color: var(--icon) !important;
+  transition: color 0.15s ease !important;
+}
+
+#nav-bar .toolbarbutton-1 > .toolbarbutton-icon,
+#nav-bar .toolbarbutton-1 > .toolbarbutton-badge-stack {
+  border-radius: var(--radius-sm) !important;
+  transition: background-color 0.15s ease !important;
+}
+
+.toolbarbutton-1:not([disabled]):hover {
+  color: var(--text) !important;
+}
+
+#nav-bar .toolbarbutton-1:not([disabled]):hover > .toolbarbutton-icon,
+#nav-bar .toolbarbutton-1:not([disabled]):hover > .toolbarbutton-badge-stack {
+  background-color: var(--bg-hover) !important;
+}
+
+#back-button[disabled="true"],
+#forward-button[disabled="true"] {
+  opacity: 0.3 !important;
+}
+
+/* El botón de la barra lateral no queda "pintado" cuando está abierta */
+#sidebar-button > .toolbarbutton-icon {
+  background-color: transparent !important;
+}
+
+/* Inicio usa el color normal de los controles (Propuesta B): el naranja
+   queda solo para estados activos, foco y la pestaña seleccionada */
+
+.toolbarbutton-1[checked="true"],
+.toolbarbutton-1[open="true"] {
+  color: var(--accent) !important;
+}
+
+/* Avatar de la cuenta con un anillo neutro, para no competir con el acento */
+#fxa-avatar-image {
+  border-radius: 50% !important;
+  box-shadow: 0 0 0 2px var(--border-hi) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   8. BOTONES DE VENTANA DENTRO DE LA TOOLBAR
+      Como las tabs horizontales están ocultas, se muestran
+      los del #nav-bar (los mismos que usa el modo vertical).
+   ══════════════════════════════════════════════════════════ */
+
+#nav-bar > .titlebar-buttonbox-container {
+  display: flex !important;
+  visibility: visible !important;
+  align-items: center !important;
+  margin-inline-start: 4px !important;
+}
+
+/* Mismo aspecto que el resto de botones de la toolbar: un cuadrado
+   redondeado que aparece al pasar el mouse, sin el círculo de Yaru/Adwaita.
+   Los íconos de GTK tienen trazo fino, así que se reemplazan por SVG propios
+   (chrome/icons/win-*.svg, trazo 1.6) usados como máscara: se pintan con el
+   color del texto, igual que los demás íconos. */
+#nav-bar .titlebar-button {
+  /* Mismo color que los íconos del resto de la toolbar (lo define el tema) */
+  color: var(--toolbarbutton-icon-fill, var(--icon)) !important;
+  padding: 0 !important;
+  margin-inline: 1px !important;
+  align-self: center !important;
+  min-height: 0 !important;
+  border-radius: var(--radius-sm) !important;
+  background-color: transparent !important;
+  transition: background-color 0.15s ease !important;
+}
+
+#nav-bar .titlebar-button > .toolbarbutton-icon {
+  /* Mismo tamaño que los demás botones (variable de Firefox 158; el 28px es
+     respaldo: sin tamaño válido el ícono desaparece) */
+  width: var(--toolbarbutton-icon-size, 28px) !important;
+  height: var(--toolbarbutton-icon-size, 28px) !important;
+  border-radius: 0 !important;
+  background: currentColor !important;
+  mask-size: 16px !important;
+  mask-position: center !important;
+  mask-repeat: no-repeat !important;
+}
+
+#nav-bar .titlebar-min > .toolbarbutton-icon     { mask-image: url("icons/win-minimize.svg") !important; }
+#nav-bar .titlebar-max > .toolbarbutton-icon     { mask-image: url("icons/win-maximize.svg") !important; }
+#nav-bar .titlebar-restore > .toolbarbutton-icon { mask-image: url("icons/win-restore.svg") !important; }
+#nav-bar .titlebar-close > .toolbarbutton-icon   { mask-image: url("icons/win-close.svg") !important; }
+
+#nav-bar .titlebar-button:hover {
+  background-color: var(--bg-hover) !important;
+}
+
+#nav-bar .titlebar-close:hover {
+  background-color: #e5484d !important;
+  color: #fff !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   9. ÁREA DE CONTENIDO EN TARJETA
+   ══════════════════════════════════════════════════════════ */
+
+:root:not([inFullscreen]) #tabbrowser-tabbox {
+  margin: var(--gap) var(--gap) var(--gap) 0 !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-card) !important;
+  overflow: clip !important;
+  outline: none !important;
+}
+
+#tabbrowser-tabpanels {
+  background-color: var(--bg-newtab) !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   10. MENÚS
+   ══════════════════════════════════════════════════════════ */
+
+/* Firefox dibuja el menú dentro de ::part(content) usando estas variables.
+   La caja externa (menupopup/panel) tiene que quedar sin fondo ni borde:
+   si se pinta, aparece un "doble fondo" rectangular detrás del redondeado. */
+menupopup,
+panel {
+  --panel-background-color: var(--bg-panel) !important;
+  --panel-text-color: var(--text) !important;
+  --panel-border-color: var(--border-hi) !important;
+  --panel-border-radius: 10px !important;
+  --panel-padding: 4px !important;
+  /* La sombra tiene que entrar en --panel-box-shadow-margin (4px en Linux):
+     la ventana del menú termina ahí y lo que sobresale se corta en recto,
+     dibujando un "marco" rectangular alrededor del menú redondeado. */
+  --panel-box-shadow: 0 0 var(--panel-box-shadow-margin, 4px) rgba(0, 0, 0, 0.45) !important;
+  --panel-separator-color: var(--border) !important;
+}
+
+/* Los avisos (nueva pestaña cambiada, permisos, extensiones…) usan
+   --panel-padding como margen del texto: con 4px queda pegado al borde. */
+panel.popup-notification-panel {
+  --panel-padding: 16px !important;
+}
+
+menupopup {
+  appearance: none !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+menuitem,
+menu {
+  color: var(--text) !important;
+  border-radius: var(--radius-sm) !important;
+  padding-block: 4px !important;
+  padding-inline: 8px !important;
+}
+
+menuitem:hover,
+menuitem[_moz-menuactive="true"],
+menu:hover,
+menu[_moz-menuactive="true"] {
+  background-color: var(--bg-hover) !important;
+  color: var(--text) !important;
+}
+
+menuitem[disabled="true"] {
+  color: var(--text-muted) !important;
+  opacity: 0.5 !important;
+}
+
+menuseparator {
+  border-color: var(--border) !important;
+  margin: 3px 0 !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   11. SCROLLBARS
+   ══════════════════════════════════════════════════════════ */
+
+* {
+  scrollbar-color: var(--scrollbar-thumb) transparent !important;
+  scrollbar-width: thin !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   12. FINDBAR (Ctrl+F)
+   ══════════════════════════════════════════════════════════ */
+
+findbar,
+#FindToolbar {
+  background-color: var(--bg-panel) !important;
+  border-top: 1px solid var(--border) !important;
+  color: var(--text) !important;
+  box-shadow: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   13. STATUS BAR
+   ══════════════════════════════════════════════════════════ */
+
+#statuspanel-label {
+  background-color: var(--bg-panel) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  color: var(--text-muted) !important;
+  font-size: 11px !important;
+  padding: 2px 8px !important;
+}
+
+/* ══════════════════════════════════════════════════════════
+   14. TEXTURA DE GRANO (arenado suave)
+       Un SVG de ruido en mosaico sobre el color de fondo de cada
+       superficie. Intensidad y tamaño del grano: chrome/icons/grain.svg
+       Para apagarla: --grain: none;
+   ══════════════════════════════════════════════════════════ */
+
+:root {
+  --grain: url("icons/grain.svg");
+}
+
+/* Mismos selectores que las reglas originales, para ganarles en
+   especificidad y no tener que tocar cada sección */
+:root,
+#nav-bar,
+#sidebar-box,
+:root:not([inFullscreen]) #sidebar-container:not([hidden]),
+#statuspanel-label {
+  background-image: var(--grain) !important;
+  background-repeat: repeat !important;
+}
+
+/* Menús y paneles: el fondo se dibuja en la caja interna.
+   #autoscroller (clic con la rueda) dibuja su ícono como fondo: se excluye */
+menupopup::part(content),
+panel:not(#autoscroller)::part(content) {
+  background-image: var(--grain) !important;
+  background-repeat: repeat !important;
+}

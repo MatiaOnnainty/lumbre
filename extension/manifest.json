@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Lumbre",
+  "version": "0.7.0",
+  "description": "Nueva pestaña e inicio personal: accesos, fijados, sesión, historial reciente, espacios y herramientas de desarrollo.",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "espacio-newtab@agustin.onnainty",
+      "strict_min_version": "128.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+  "permissions": [
+    "tabs",
+    "history",
+    "sessions",
+    "bookmarks",
+    "topSites",
+    "storage",
+    "search",
+    "theme"
+  ],
+  "background": {
+    "scripts": [
+      "js/background.js"
+    ]
+  },
+  "chrome_url_overrides": {
+    "newtab": "newtab.html"
+  },
+  "chrome_settings_overrides": {
+    "homepage": "newtab.html"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "icons": {
+    "16": "icons/lumbre-16.png",
+    "32": "icons/lumbre-32.png",
+    "48": "icons/lumbre-48.png",
+    "96": "icons/lumbre-96.png",
+    "128": "icons/lumbre-128.png"
+  }
+}
