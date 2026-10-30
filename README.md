@@ -1,4 +1,8 @@
-# Lumbre
+<p align="center">
+  <img src="branding/lumbre-256.png" alt="Logo de Lumbre" width="128" height="128">
+</p>
+
+<h1 align="center">Lumbre</h1>
 
 Un entorno de Firefox con dos partes:
 
@@ -71,7 +75,7 @@ actualizar Firefox, empezá por ahí.
 | `chrome/icons/` | Botones de ventana y textura de grano |
 | `user.js` | Preferencias necesarias (`about:config`) |
 | `install.sh` | Enlaza `chrome/` y copia `user.js` al perfil |
-| `branding/` | Logo de Lumbre en tamaños grandes (`.png`, `.ico`) |
+| `branding/` | Logo de Lumbre (`.png`, `.ico`) e imagen para compartir el repo (`social-preview.png`) |
 
 ## Desarrollo
 
